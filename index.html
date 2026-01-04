@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Monthly Attendance Calculator</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #f4f6fb;
+      color: #222;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    label {
+      font-weight: 600;
+      margin-right: 6px;
+    }
+
+    input[type="month"] {
+      padding: 6px 8px;
+      font-size: 14px;
+    }
+
+    button {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 4px;
+      background: #2563eb;
+      color: #fff;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+
+    thead {
+      background: #e5e7eb;
+    }
+
+    th, td {
+      border: 1px solid #d1d5db;
+      padding: 6px 8px;
+      text-align: center;
+    }
+
+    th {
+      font-weight: 700;
+    }
+
+    .subject-header {
+      background: #f9fafb;
+    }
+
+    .results {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 10px;
+    }
+
+    .result-card {
+      flex: 1 1 200px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 6px;
+      padding: 10px 12px;
+    }
+
+    .result-card h3 {
+      margin: 0 0 6px 0;
+      font-size: 15px;
+    }
+
+    .result-card p {
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .legend {
+      margin-top: 8px;
+      font-size: 13px;
+      color: #555;
+    }
+
+    @media (max-width: 700px) {
+      table {
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Monthly Attendance Calculator</h1>
+  <div class="container">
+    <div class="controls">
+      <div>
+        <label for="monthInput">Select Month:</label>
+        <input type="month" id="monthInput" />
+      </div>
+      <button id="generateBtn">Generate Days</button>
+      <button id="calculateBtn">Calculate Absents</button>
+    </div>
+
+    <p class="legend">
+      Tick a box if you were <strong>ABSENT</strong> in that subject on that day.
+    </p>
+
+    <div id="tableContainer"></div>
+
+    <div class="results">
+      <div class="result-card">
+        <h3>Maths</h3>
+        <p>Absent classes: <span id="mathsAbsent">0</span></p>
+      </div>
+      <div class="result-card">
+        <h3>DSDV</h3>
+        <p>Absent classes: <span id="dsdvAbsent">0</span></p>
+      </div>
+      <div class="result-card">
+        <h3>SS</h3>
+        <p>Absent classes: <span id="ssAbsent">0</span></p>
+      </div>
+      <div class="result-card">
+        <h3>FOT</h3>
+        <p>Absent classes: <span id="fotAbsent">0</span></p>
+      </div>
+      <div class="result-card">
+        <h3>Total</h3>
+        <p>Total absent classes: <span id="totalAbsent">0</span></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const subjects = ["maths", "dsdv", "ss", "fot"];
+
+    function getDaysInMonth(year, monthIndex) {
+      // monthIndex: 0-11
+      return new Date(year, monthIndex + 1, 0).getDate();
+    }
+
+    function buildTable(year, monthIndex) {
+      const days = getDaysInMonth(year, monthIndex);
+
+      let html = '<table>';
+      html += '<thead><tr><th>Day</th>';
+
+      subjects.forEach(sub => {
+        html += `<th class="subject-header">${sub.toUpperCase()}</th>`;
+      });
+      html += '</tr></thead><tbody>';
+
+      for (let d = 1; d <= days; d++) {
+        html += `<tr><td>${d}</td>`;
+        subjects.forEach(sub => {
+          const id = `${sub}-${d}`;
+          html += `
+            <td>
+              <input type="checkbox"
+                     id="${id}"
+                     data-subject="${sub}"
+                     data-day="${d}" />
+            </td>`;
+        });
+        html += '</tr>';
+      }
+
+      html += '</tbody></table>';
+      document.getElementById('tableContainer').innerHTML = html;
+    }
+
+    function calculateAbsents() {
+      const counts = {
+        maths: 0,
+        dsdv: 0,
+        ss: 0,
+        fot: 0
+      };
+
+      const checkboxes = document.querySelectorAll('#tableContainer input[type="checkbox"]');
+      checkboxes.forEach(cb => {
+        if (cb.checked) {
+          const sub = cb.getAttribute('data-subject');
+          counts[sub]++;
+        }
+      });
+
+      // Update UI
+      document.getElementById('mathsAbsent').textContent = counts.maths;
+      document.getElementById('dsdvAbsent').textContent = counts.dsdv;
+      document.getElementById('ssAbsent').textContent = counts.ss;
+      document.getElementById('fotAbsent').textContent = counts.fot;
+      document.getElementById('totalAbsent').textContent =
+        counts.maths + counts.dsdv + counts.ss + counts.fot;
+    }
+
+    document.getElementById('generateBtn').addEventListener('click', () => {
+      const monthValue = document.getElementById('monthInput').value;
+      if (!monthValue) {
+        alert('Please select a month first.');
+        return;
+      }
+      const [yearStr, monthStr] = monthValue.split('-');
+      const year = parseInt(yearStr, 10);
+      const monthIndex = parseInt(monthStr, 10) - 1; // 0-11
+      buildTable(year, monthIndex);
+    });
+
+    document.getElementById('calculateBtn').addEventListener('click', () => {
+      calculateAbsents();
+    });
+
+    // Optional: generate current month table on first load
+    window.addEventListener('load', () => {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth(); // 0-11
+      const monthInput = document.getElementById('monthInput');
+      monthInput.value = `${year}-${String(month + 1).padStart(2, '0')}`;
+      buildTable(year, month);
+    });
+  </script>
+</body>
+</html>
